@@ -3,7 +3,6 @@ import argparse
 import sys
 import os
 import re
-import time
 import subprocess
 
 def fullpath(path):
@@ -35,17 +34,18 @@ class Ini:
 		
 
 parser = argparse.ArgumentParser(description='run starcraft with bwapi injected')
-parser.add_argument('-s', '--starcraft-dir',	help='path to starcraft dir',					metavar='DIR', default='.')
 parser.add_argument('-a', '--ai',				help='ai dll',									metavar='DLL', required=True)
+parser.add_argument('-s', '--starcraft-dir',	help='path to starcraft dir (default: CWD)',	metavar='DIR')
 parser.add_argument('-t', '--tournament',		help='tournament dll',							metavar='DLL')
 parser.add_argument('-d', '--debug',			help='inject BWAPId.dll instead of BWAPI.dll',	action='store_true')
 parser.add_argument('-v', '--verbose',			help='print command before executing it',		action='store_true')
-parser.add_argument('-i', '--injectory',		help='path to injectory',						metavar='EXE', default='injectory')
-parser.add_argument('--args',					help='args to pass to injectory',				nargs=argparse.REMAINDER, default='')
+parser.add_argument('-i', '--injectory',		help='path to injectory (default: injectory)',	metavar='EXE', default='injectory')
+parser.add_argument('-', dest='args',			help='args to pass to injectory',				nargs=argparse.REMAINDER, default='')
 args = parser.parse_args()
 
 
-os.chdir(args.starcraft_dir)
+if args.starcraft_dir:
+	os.chdir(args.starcraft_dir)
 
 ini = Ini('bwapi-data/bwapi.ini')
 
@@ -70,5 +70,6 @@ debugSuffix = 'd' if args.debug else ''
 command = args.injectory+' --launch starcraft.exe --inject bwapi-data/BWAPI'+debugSuffix+'.dll '+' '.join(args.args)
 if args.verbose:
 	print command
-subprocess.call(command.split())
-time.sleep(3)
+
+DETACHED_PROCESS = 0x00000008
+subprocess.check_call(command.split(), creationflags=DETACHED_PROCESS)
